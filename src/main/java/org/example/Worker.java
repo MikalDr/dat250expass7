@@ -16,6 +16,8 @@ public class Worker {
         Connection connection = factory.newConnection();
         Channel channel = connection.createChannel();
 
+        channel.basicQos(1); // accept only one unack-ed message at a time (see below)
+
         DeliverCallback deliverCallback = (consumerTag, delivery) -> {
             String message = new String(delivery.getBody(), "UTF-8");
 
@@ -28,9 +30,10 @@ public class Worker {
                 }
             } finally {
                 System.out.println(" [x] Done");
+                channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
             }
         };
-        boolean autoAck = true; // acknowledgment is covered below
+        boolean autoAck = false;
         channel.basicConsume(QUEUE_NAME, autoAck, deliverCallback, consumerTag -> { });
     }
 
